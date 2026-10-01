@@ -55,9 +55,9 @@ Mark each endpoint `public`, `user`, or `admin`. Mark which collection paginates
 filters or sorts.
 
 ## 5. Technical choices
-- **Database host:** (Neon, Supabase, Railway, Atlas, ...) and why
-- **OAuth2 provider:** (Google, GitHub, Auth0) and confirmation that it supports Authorization Code + PKCE from a native app
-- **Repo layout:** monorepo or split, and why
+- **Database host:** Supabase. We chose Supabase for our workout-tracker school project because it provides a free managed PostgreSQL database, a browser dashboard for team collaboration, and optional user authentication. It allows us to focus on developing our own API, workout scheduling features, and data-validation logic while using an industry-relevant PostgreSQL backend.
+- **OAuth2 provider:** We will use Google OAuth 2.0 through Supabase Auth because it gives users a familiar, secure sign-in method without requiring our team to manage passwords. Supabase manages the OAuth redirect and user session, while our API verifies the authenticated user and restricts workout data to its owner. We will use the Authorization Code flow with PKCE for secure authentication.
+- **Repo layout:** Split repo so it's easier for our team to stay organized.
 These become your ADRs later.
 
 ## 6. Risks
