@@ -31,8 +31,22 @@ erDiagram
 ## 4. Endpoints
 | Verb | Path | Auth | Purpose |
 |---|---|---|---|
-| GET | /api/v1/workouts?page=0&size=20 | user | list my workouts (paginated) |
-| ... | ... | ... | ... |
+| GET | /api/v1/fittrack/workouts?page=0&size=20 | user | list my workouts (paginated) |
+| POST | /api/v1/fittrack/workouts | user | create a workout |
+| GET | /api/v1/fittrack/exercises?page=0&size=20 | public | browse exercises (paginated) |
+| POST | /api/v1/fittrack/exercises | admin | add an exercise |
+| DELETE | /api/v1/fittrack/exercises | admin | remove an exercise |
+| PATCH | /api/v1/fittrack/exercises/description | admin | update an exercise's description |
+| PUT | /api/v1/fittrack/exercises | admin | replace an exercise |
+| PATCH | /api/v1/fittrack/workouts | user | edit the user's workout |
+| DELETE | /api/v1/fittrack/workouts | user | remove a workout from the user's list |
+| GET | /api/v1/fittrack/users?page=0&size=20 | admin | list users (paginated) |
+| DELETE | /api/v1/fittrack/users | admin | remove a user |
+| PATCH | /api/v1/fittrack/users | admin | grant admin privileges |
+
+The exercise and user collection endpoints paginate with `page` and `size`. Exercise
+listing will support filtering and sorting; proposed filters include `muscleGroup`,
+`type`, `difficulty`, and `equipment`, with sorting controlled by a `sort` parameter.
 Mark each endpoint `public`, `user`, or `admin`. Mark which collection paginates and which
 filters or sorts.
 
