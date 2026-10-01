@@ -15,16 +15,41 @@ try changes at https://mermaid.live):
 
 ```mermaid
 erDiagram
-    USER ||--o{ THING : owns
+    USER ||--o{ WORKOUT : owns
+    WORKOUT ||--o{ WORKOUT_EXERCISE : includes
+    EXERCISE ||--o{ WORKOUT_EXERCISE : is_logged_in
+
     USER {
-        bigint id PK
+        int id PK
         string email UK
+        string password_hash
+        string role "user or admin"
+        datetime created_at
     }
-    THING {
-        bigint id PK
-        bigint user_id FK
+
+    WORKOUT {
+        int id PK
+        int user_id FK
         string name
-        string notes "nullable"
+        datetime performed_at
+        datetime created_at
+    }
+
+    EXERCISE {
+        int id PK
+        string name UK
+        string description
+        string category
+    }
+
+    WORKOUT_EXERCISE {
+        int id PK
+        int workout_id FK
+        int exercise_id FK
+        int sets
+        int repetitions
+        decimal weight
+        int duration_seconds
     }
 ```
 
