@@ -1,13 +1,17 @@
 # <API name> Proposal
 
 ## 1. The pitch (one paragraph)
-What the API does, who uses it, and why a client app would need it.
+The FitTrack API can be used as a catalog for different workouts. The FitTrack API will be able to fetch workouts along with
+adding and removing workouts. The API will come with separated User and Admin functionality. Admins will be able to create new workouts,
+create new users, promote users to admin, remove workouts, and view users. Users will be able to list favorite workouts, list a
+catalog of workouts, create a workout  session, and edit workout session.
 
 ## 2. Resources
-| Resource | Key fields | Relationships |
-|---|---|---|
-| User | id, email, displayName, role | a User has many Workouts |
-| ... | ... | ... |
+| Resource | Key fields | Relationships             |
+|--|---|---------------------------|
+| User | id, displayName, password, role | a User has many Workouts  |
+| Admin | id, displayName, passowrd, role | An Admin should have many Workouts and should be able to edit users |
+| Workout | id, name, description, sets, reps | a User and admin should have many Workouts |
 
 ## 3. ER sketch
 Tables, primary and foreign keys, and cardinality. Edit this Mermaid diagram (it renders on GitHub;
