@@ -1,3 +1,13 @@
 spring:
   application:
     name: fittrack-api
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  sql:
+    init:
+      mode: never
+  mvc:
+    problemdetails:
+      enabled: true
