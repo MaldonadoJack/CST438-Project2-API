@@ -1,32 +1,31 @@
 package com.fittrack.api.exercise
 
-import org.springframework.jdbc.core.JdbcTemplate
-import org.springframework.jdbc.support.GeneratedKeyHolder
-import org.springframework.stereotype.Repository
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
-@Repository
-class ExerciseRepository(private val jdbc: JdbcTemplate) {
-    fun insert(request: ExerciseCreateRequest): ExerciseResponse {
-        val keys = GeneratedKeyHolder()
-        val name = request.name.trim()
-        jdbc.update({ connection ->
-            connection.prepareStatement(
-                "INSERT INTO exercises (name, description, category) VALUES (?, ?, ?)",
-                arrayOf("id")
-            ).apply {
-                setString(1, name)
-                setString(2, request.description)
-                setString(3, request.category)
-            }
-        }, keys)
-        return ExerciseResponse(requireNotNull(keys.key).toLong(), name, request.description, request.category)
-    }
-}
-
 @Service
-class ExerciseService(private val repository: ExerciseRepository) {
+class ExerciseService(
+    private val exerciseRepository: ExerciseRepository,
+    private val exerciseWriteRepository: ExerciseWriteRepository
+) {
+    fun searchExercises(
+        search: String?,
+        pageable: Pageable
+    ): Page<Exercise> {
+        return if (search.isNullOrBlank()) {
+            exerciseRepository.findAll(pageable)
+        } else {
+            exerciseRepository.findByNameContainingIgnoreCaseOrMuscleGroupContainingIgnoreCase(
+                search,
+                search,
+                pageable
+            )
+        }
+    }
+
     @Transactional
-    fun create(request: ExerciseCreateRequest): ExerciseResponse = repository.insert(request)
+    fun create(request: ExerciseCreateRequest): ExerciseResponse =
+        exerciseWriteRepository.insert(request)
 }

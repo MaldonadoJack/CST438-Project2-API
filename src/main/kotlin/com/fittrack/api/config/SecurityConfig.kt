@@ -26,6 +26,7 @@ class SecurityConfig {
             .authorizeHttpRequests { rules ->
                 rules.requestMatchers(HttpMethod.POST, "/api/v1/fittrack/exercises").hasRole("ADMIN")
                 rules.requestMatchers(HttpMethod.GET, "/api/v1/fittrack/exercises").permitAll()
+                rules.requestMatchers(HttpMethod.GET, "/fittrack/exercises").permitAll()
                 rules.anyRequest().authenticated()
             }
             .exceptionHandling { errors ->
