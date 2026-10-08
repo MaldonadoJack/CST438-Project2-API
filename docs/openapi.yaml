@@ -258,6 +258,27 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/v1/fittrack/users/me:
+    get:
+      tags: [Users]
+      operationId: getMyProfile
+      summary: View my user profile
+      description: |
+        Returns the authenticated user's id, email, and display name.
+        The authenticated principal must provide the user's verified email.
+        Authentication provider integration is pending.
+      responses:
+        '200':
+          description: The authenticated user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/v1/users/me:
     delete:
       tags: [Users]
@@ -408,6 +429,22 @@ components:
         default: 20
 
   schemas:
+    UserProfile:
+      type: object
+      required: [id, email, displayName]
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        email:
+          type: string
+          format: email
+          example: student@example.com
+        displayName:
+          type: string
+          example: Student User
+
     ExerciseCreate:
       type: object
       required: [name]
