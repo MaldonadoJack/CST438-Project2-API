@@ -17,7 +17,7 @@ class ExerciseService(
         return if (search.isNullOrBlank()) {
             exerciseRepository.findAll(pageable)
         } else {
-            exerciseRepository.findByNameContainingIgnoreCaseOrMuscleGroupContainingIgnoreCase(
+            exerciseRepository.findByNameContainingIgnoreCaseOrCategoryContainingIgnoreCase(
                 search,
                 search,
                 pageable

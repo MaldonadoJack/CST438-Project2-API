@@ -1,3 +1,4 @@
+
 package com.fittrack.api.exercise
 
 import jakarta.persistence.Entity
@@ -13,7 +14,6 @@ class Exercise(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,
     var name: String = "",
-    var muscleGroup: String = "",
-    var equipment: String = "",
-    var description: String = ""
+    var description: String? = null,
+    var category: String? = null
 )
