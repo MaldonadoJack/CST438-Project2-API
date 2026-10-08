@@ -1,3 +1,4 @@
+
 package com.fittrack.api
 
 import com.fittrack.api.exercise.Exercise
@@ -30,20 +31,17 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
             listOf(
                 Exercise(
                     name = "Push-Up",
-                    muscleGroup = "Chest",
-                    equipment = "BodyWeight",
+                    category = "Chest",
                     description = "A bodyweight pressing exercise"
                 ),
                 Exercise(
                     name = "Push Press",
-                    muscleGroup = "Shoulders",
-                    equipment = "Barbell",
+                    category = "Shoulders",
                     description = "An overhead pressing exercise"
                 ),
                 Exercise(
                     name = "Squat",
-                    muscleGroup = "Legs",
-                    equipment = "Barbell",
+                    category = "Legs",
                     description = "A lower-body exercise"
                 )
             )
@@ -53,7 +51,11 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `searches and paginates exercises`() {
         mockMvc.perform(
-            get("/fittrack/exercises").param("search", "push").param("page", "0").param("size", "1").accept(MediaType.APPLICATION_JSON)
+            get("/fittrack/exercises")
+                .param("search", "push")
+                .param("page", "0")
+                .param("size", "1")
+                .accept(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content", hasSize<Any>(1)))
@@ -64,7 +66,10 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `returns all exercises when no search is provided`() {
         mockMvc.perform(
-            get("/fittrack/exercises").param("page", "0").param("size", "2").accept(MediaType.APPLICATION_JSON)
+            get("/fittrack/exercises")
+                .param("page", "0")
+                .param("size", "2")
+                .accept(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content", hasSize<Any>(2)))
@@ -75,7 +80,10 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `returns the second page of exercises`() {
         mockMvc.perform(
-            get("/fittrack/exercises").param("page", "1").param("size", "2").accept(MediaType.APPLICATION_JSON)
+            get("/fittrack/exercises")
+                .param("page", "1")
+                .param("size", "2")
+                .accept(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.content", hasSize<Any>(1)))
