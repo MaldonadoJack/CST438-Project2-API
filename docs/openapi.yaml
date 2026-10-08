@@ -39,6 +39,53 @@ tags:
     description: Admin-only user management
 
 paths:
+  /api/v1/fittrack/exercises:
+    post:
+      tags: [Exercises]
+      operationId: createExercise
+      summary: Add an exercise (admin only)
+      description: |
+        Requires ADMIN authorization. Authentication provider integration is
+        pending; the current implementation denies unauthenticated requests.
+        Creates a row using the existing exercises table. Names are trimmed
+        before insertion and must be unique (case-sensitive).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExerciseCreate'
+      responses:
+        '201':
+          description: Exercise created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ExerciseCreate'
+                  - type: object
+                    required: [id]
+                    properties:
+                      id:
+                        type: integer
+                        format: int64
+                        example: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: An exercise with this name already exists
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          $ref: '#/components/responses/InternalError'
   /api/v1/workouts:
     get:
       tags: [Workouts]
@@ -361,6 +408,26 @@ components:
         default: 20
 
   schemas:
+    ExerciseCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '\S'
+          example: Squat
+        description:
+          type: string
+          maxLength: 1000
+          nullable: true
+          example: Lower-body exercise
+        category:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: strength
     MuscleGroup:
       type: string
       enum: [CHEST, BACK, LEGS, SHOULDERS, ARMS, CORE, CARDIO]
