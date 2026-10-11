@@ -12,35 +12,84 @@ import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
 class SecurityConfig {
-    // No generated development password or login bypass. The team's future
-    // authentication integration must supply a principal with ROLE_ADMIN.
+
+    // No generated development password or login bypass.
+    // The team's future authentication integration must
+    // supply a principal with ROLE_ADMIN.
     @Bean
     fun userDetailsService(): UserDetailsService = UserDetailsService {
-        throw UsernameNotFoundException("Authentication provider has not been configured")
+        throw UsernameNotFoundException(
+            "Authentication provider has not been configured"
+        )
     }
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity, mapper: ObjectMapper): SecurityFilterChain {
+    fun securityFilterChain(
+        http: HttpSecurity,
+        mapper: ObjectMapper
+    ): SecurityFilterChain {
+
         http.csrf { it.disable() }
-            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
+            .sessionManagement {
+                it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            }
             .authorizeHttpRequests { rules ->
-                rules.requestMatchers(HttpMethod.POST, "/api/v1/fittrack/exercises").hasRole("ADMIN")
-                rules.requestMatchers(HttpMethod.GET, "/api/v1/fittrack/exercises").permitAll()
-                rules.requestMatchers(HttpMethod.GET, "/fittrack/exercises").permitAll()
+
+                // Public routes for Spring Boot Docker assignment
+                rules.requestMatchers(
+                    HttpMethod.GET,
+                    "/",
+                    "/greeting"
+                ).permitAll()
+
+                // Existing Fitness Tracker API security rules
+                rules.requestMatchers(
+                    HttpMethod.POST,
+                    "/api/v1/fittrack/exercises"
+                ).hasRole("ADMIN")
+
+                rules.requestMatchers(
+                    HttpMethod.GET,
+                    "/api/v1/fittrack/exercises"
+                ).permitAll()
+
+                rules.requestMatchers(
+                    HttpMethod.GET,
+                    "/fittrack/exercises"
+                ).permitAll()
+
+                // All other endpoints require authentication
                 rules.anyRequest().authenticated()
             }
             .exceptionHandling { errors ->
+
                 errors.authenticationEntryPoint { _, response, _ ->
                     response.status = 401
                     response.contentType = "application/problem+json"
-                    mapper.writeValue(response.outputStream, mapOf("title" to "Unauthorized", "status" to 401))
+
+                    mapper.writeValue(
+                        response.outputStream,
+                        mapOf(
+                            "title" to "Unauthorized",
+                            "status" to 401
+                        )
+                    )
                 }
+
                 errors.accessDeniedHandler { _, response, _ ->
                     response.status = 403
                     response.contentType = "application/problem+json"
-                    mapper.writeValue(response.outputStream, mapOf("title" to "Forbidden", "status" to 403))
+
+                    mapper.writeValue(
+                        response.outputStream,
+                        mapOf(
+                            "title" to "Forbidden",
+                            "status" to 403
+                        )
+                    )
                 }
             }
+
         return http.build()
     }
 }
