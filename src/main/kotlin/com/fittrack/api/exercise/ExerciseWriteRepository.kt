@@ -26,4 +26,14 @@ class ExerciseWriteRepository(private val jdbc: JdbcTemplate) {
             request.category
         )
     }
+
+    fun updateDescription(
+        id: Long,
+        description: String?
+    ): Int =
+        jdbc.update(
+            "UPDATE exercises SET description = ? WHERE id = ?",
+            description,
+            id
+        )
 }
