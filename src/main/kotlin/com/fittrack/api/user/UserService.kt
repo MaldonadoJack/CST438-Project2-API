@@ -18,6 +18,23 @@ class UserService(
         return userRepository.findAll()
     }
 
+    @Transactional
+    fun getOrCreateGoogleUser(email: String, displayName: String): UserProfileResponse {
+        val user = userRepository.findByEmail(email) ?: userRepository.save(
+            User(
+                email = email,
+                displayName = displayName,
+                role = "user"
+            )
+        )
+
+        return UserProfileResponse(
+            id = requireNotNull(user.id),
+            email = user.email,
+            displayName = user.displayName
+        )
+    }
+
     @Transactional(readOnly = true)
     fun getMyProfile(email: String): UserProfileResponse {
         val user = userRepository.findByEmail(email)
