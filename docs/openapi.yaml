@@ -39,6 +39,24 @@ tags:
     description: Admin-only user management
 
 paths:
+  /api/v1/fittrack/auth/google:
+    post:
+      tags: [Users]
+      operationId: signInWithGoogle
+      summary: Sign in or create a profile with a Google ID token
+      description: |
+        Send the Google ID token in the Authorization header as a Bearer token.
+        The API verifies the token and creates the user's profile on first login.
+      responses:
+        '200':
+          description: The signed-in user's profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/v1/fittrack/exercises:
     post:
       tags: [Exercises]
