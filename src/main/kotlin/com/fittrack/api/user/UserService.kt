@@ -1,5 +1,7 @@
 package com.fittrack.api.user
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -14,8 +16,8 @@ class UserService(
         userRepository.deleteById(id)
     }
 
-    fun getAllUsers(): List<User> {
-        return userRepository.findAll()
+    fun getAllUsers(pageable: Pageable): Page<User> {
+        return userRepository.findAll(pageable)
     }
 
     @Transactional
