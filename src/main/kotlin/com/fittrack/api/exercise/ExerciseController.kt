@@ -8,11 +8,13 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableDefault
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.PathVariable;
 
 data class ExerciseCreateRequest(
     @field:NotBlank
@@ -22,6 +24,11 @@ data class ExerciseCreateRequest(
     val description: String? = null,
     @field:Size(max = 100)
     val category: String? = null
+)
+
+data class ExerciseDescriptionPatchRequest(
+    @field:Size(max = 1000)
+    val description: String?
 )
 
 data class ExerciseResponse(
@@ -36,7 +43,7 @@ data class ExerciseResponse(
 class ExerciseController(
     private val exerciseService: ExerciseService
 ) {
-    @GetMapping("/fittrack/exercises")
+    @GetMapping("/api/v1/fittrack/exercises")
     fun searchExercises(
         @RequestParam(required = false) search: String?,
         @PageableDefault(
@@ -52,4 +59,11 @@ class ExerciseController(
         @Valid @RequestBody request: ExerciseCreateRequest
     ): ResponseEntity<ExerciseResponse> =
         ResponseEntity.status(201).body(exerciseService.create(request))
+
+    @PatchMapping("/api/v1/fittrack/exercises/{id}")
+    fun updateDescription(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: ExerciseDescriptionPatchRequest
+    ): ExerciseResponse =
+        exerciseService.updateDescription(id, request.description)
 }
