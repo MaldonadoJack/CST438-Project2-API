@@ -56,7 +56,7 @@ class AdminControllerIntegrationTest @Autowired constructor(
     @Test
     fun `returns a paginated list of users`() {
         mockMvc.perform(
-            get("/api/v1/fittrack/admin/users")
+            get("/fittrack/admin/users")
                 .param("page", "0")
                 .param("size", "2")
                 .accept(MediaType.APPLICATION_JSON)
@@ -72,7 +72,7 @@ class AdminControllerIntegrationTest @Autowired constructor(
         val userToDelete = userRepository.findByEmail("user1@example.com")!!
 
         mockMvc.perform(
-            delete("/api/v1/fittrack/admin/users/${userToDelete.id}")
+            delete("/fittrack/admin/users/${userToDelete.id}")
                 .with(csrf()) // adding csrf since it's a delete request and security is enabled
         )
             .andExpect(status().isNoContent)
