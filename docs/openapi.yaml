@@ -37,8 +37,56 @@ tags:
     description: The signed-in user's own account
   - name: Admin
     description: Admin-only user management
+  - name: Progress
+    description: Record and view exercise sets and repetitions
 
 paths:
+  /api/v1/fittrack/progress:
+    post:
+      tags: [Progress]
+      operationId: recordProgress
+      summary: Record sets and repetitions for an exercise
+      description: |
+        Records sets and repetitions for an exercise in a workout
+        belonging to the authenticated user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgressCreate'
+      responses:
+        '201':
+          description: Progress recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressRecord'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    get:
+      tags: [Progress]
+      operationId: getMyProgress
+      summary: View my exercise progress
+      description: |
+        Returns progress records belonging to the authenticated user,
+        ordered from newest to oldest.
+      responses:
+        '200':
+          description: The authenticated user's progress records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProgressRecord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /api/v1/fittrack/auth/google:
     post:
       tags: [Users]
@@ -447,6 +495,40 @@ components:
         default: 20
 
   schemas:
+    ProgressCreate:
+      type: object
+      required: [workoutId, exerciseId, sets, repetitions]
+      properties:
+        workoutId:
+          type: integer
+          format: int64
+          example: 1
+        exerciseId:
+          type: integer
+          format: int64
+          example: 7
+        sets:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 3
+        repetitions:
+          type: integer
+          format: int64
+          minimum: 1
+          example: 12
+
+    ProgressRecord:
+      allOf:
+        - $ref: '#/components/schemas/ProgressCreate'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 42
+
     UserProfile:
       type: object
       required: [id, email, displayName]
@@ -742,3 +824,4 @@ components:
           example:
             title: Internal Server Error
             status: 500
+
