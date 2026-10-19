@@ -11,6 +11,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.context.support.WithAnonymousUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -22,7 +23,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@WithMockUser(roles = ["admin"])
+@WithMockUser(roles = ["ADMIN"])
 class AdminControllerIntegrationTest @Autowired constructor(
     private val mockMvc: MockMvc,
     private val userRepository: UserRepository
@@ -78,5 +79,58 @@ class AdminControllerIntegrationTest @Autowired constructor(
             .andExpect(status().isNoContent)
 
         assertFalse(userRepository.findById(userToDelete.id!!).isPresent)
+    }
+
+    @Test
+    fun `admin deletes user through versioned endpoint`() {
+        val userToDelete = userRepository.findByEmail("user1@example.com")!!
+
+        mockMvc.perform(
+            delete("/api/v1/fittrack/users")
+                .param("id", userToDelete.id.toString())
+        )
+            .andExpect(status().isNoContent)
+
+        assertFalse(userRepository.findById(userToDelete.id!!).isPresent)
+    }
+
+    @Test
+    @WithMockUser(roles = ["USER"])
+    fun `regular user cannot delete another user`() {
+        val userToDelete = userRepository.findByEmail("user1@example.com")!!
+
+        mockMvc.perform(
+            delete("/api/v1/fittrack/users")
+                .param("id", userToDelete.id.toString())
+        )
+            .andExpect(status().isForbidden)
+    }
+
+    @Test
+    @WithAnonymousUser
+    fun `anonymous user cannot delete a user`() {
+        mockMvc.perform(
+            delete("/api/v1/fittrack/users")
+                .param("id", "1")
+        )
+            .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `deleting missing user returns not found`() {
+        mockMvc.perform(
+            delete("/api/v1/fittrack/users")
+                .param("id", "999")
+        )
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `invalid user id is rejected`() {
+        mockMvc.perform(
+            delete("/api/v1/fittrack/users")
+                .param("id", "0")
+        )
+            .andExpect(status().isBadRequest)
     }
 }

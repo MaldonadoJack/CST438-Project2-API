@@ -51,7 +51,7 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `searches and paginates exercises`() {
         mockMvc.perform(
-            get("/fittrack/exercises")
+            get("/api/v1/fittrack/exercises")
                 .param("search", "push")
                 .param("page", "0")
                 .param("size", "1")
@@ -66,7 +66,7 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `returns all exercises when no search is provided`() {
         mockMvc.perform(
-            get("/fittrack/exercises")
+            get("/api/v1/fittrack/exercises")
                 .param("page", "0")
                 .param("size", "2")
                 .accept(MediaType.APPLICATION_JSON)
@@ -80,7 +80,7 @@ class ExerciseControllerIntegrationTest @Autowired constructor(
     @Test
     fun `returns the second page of exercises`() {
         mockMvc.perform(
-            get("/fittrack/exercises")
+            get("/api/v1/fittrack/exercises")
                 .param("page", "1")
                 .param("size", "2")
                 .accept(MediaType.APPLICATION_JSON)

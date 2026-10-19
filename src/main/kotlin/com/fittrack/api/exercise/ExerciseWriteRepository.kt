@@ -36,4 +36,16 @@ class ExerciseWriteRepository(private val jdbc: JdbcTemplate) {
             description,
             id
         )
+
+    fun replace(request: ExerciseReplaceRequest, name: String): Int =
+        jdbc.update(
+            "UPDATE exercises SET name = ?, description = ?, category = ? WHERE id = ?",
+            name,
+            request.description,
+            request.category,
+            request.id
+        )
+
+    fun delete(id: Long): Int =
+        jdbc.update("DELETE FROM exercises WHERE id = ?", id)
 }
