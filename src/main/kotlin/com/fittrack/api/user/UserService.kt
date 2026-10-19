@@ -13,6 +13,13 @@ class UserService(
 ) {
     @Transactional
     fun deleteUser(id: Long) {
+        if (!userRepository.existsById(id)) {
+            throw ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User with id $id was not found"
+            )
+        }
+
         userRepository.deleteById(id)
     }
 

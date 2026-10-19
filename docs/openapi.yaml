@@ -41,6 +41,35 @@ tags:
     description: Record and view exercise sets and repetitions
 
 paths:
+  /api/v1/fittrack/users:
+    delete:
+      tags: [Admin]
+      operationId: deleteFitTrackUser
+      summary: Delete a user (admin only)
+      description: Deletes a user and their related data. Requires ADMIN authorization.
+      parameters:
+        - name: id
+          in: query
+          required: true
+          description: ID of the user to delete
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '204':
+          description: User deleted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
   /api/v1/fittrack/progress:
     post:
       tags: [Progress]
