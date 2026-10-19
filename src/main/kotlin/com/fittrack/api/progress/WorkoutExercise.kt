@@ -5,6 +5,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import java.math.BigDecimal
 
 @Entity
 @Table(name = "workout_exercises")
@@ -21,7 +22,7 @@ class WorkoutExercise(
 
     var repetitions: Long? = null,
 
-    var weight: Double? = null,
+    var weight: BigDecimal? = null,
 
     var durationSeconds: Long? = null
 )

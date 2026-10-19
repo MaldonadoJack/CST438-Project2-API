@@ -31,6 +31,32 @@ class ExerciseService(
         exerciseWriteRepository.insert(request)
 
     @Transactional
+    fun replace(request: ExerciseReplaceRequest): ExerciseResponse {
+        if (!exerciseRepository.existsById(request.id)) {
+            throw EntityNotFoundException("Exercise with id ${request.id} was not found")
+        }
+
+        val name = request.name.trim()
+        exerciseWriteRepository.replace(request, name)
+
+        return ExerciseResponse(
+            id = request.id,
+            name = name,
+            description = request.description,
+            category = request.category
+        )
+    }
+
+    @Transactional
+    fun delete(id: Long) {
+        if (!exerciseRepository.existsById(id)) {
+            throw EntityNotFoundException("Exercise with id $id was not found")
+        }
+
+        exerciseWriteRepository.delete(id)
+    }
+
+    @Transactional
     fun updateDescription(
         id: Long,
         description: String?

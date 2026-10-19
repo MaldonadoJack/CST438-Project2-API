@@ -52,6 +52,8 @@ class SecurityConfig {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { rules ->
                 rules.requestMatchers(HttpMethod.POST, "/api/v1/fittrack/exercises").hasRole("ADMIN")
+                rules.requestMatchers(HttpMethod.PUT, "/api/v1/fittrack/exercises").hasRole("ADMIN")
+                rules.requestMatchers(HttpMethod.DELETE, "/api/v1/fittrack/exercises").hasRole("ADMIN")
                 rules.requestMatchers(HttpMethod.GET, "/api/v1/fittrack/exercises").permitAll()
                 rules.requestMatchers(HttpMethod.GET, "/api/v1/fittrack/exercises").permitAll()
                 rules.requestMatchers(HttpMethod.PATCH, "/api/v1/fittrack/exercises/*").hasRole("ADMIN")
