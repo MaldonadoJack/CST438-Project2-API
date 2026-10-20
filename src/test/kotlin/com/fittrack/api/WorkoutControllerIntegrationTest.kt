@@ -18,6 +18,10 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import java.time.OffsetDateTime
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -103,5 +107,67 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
                 .accept(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `patches a workout owned by the authenticated user`() {
+        val workout = workoutRepository.findAll().first { it.name == "Morning Run" }
+
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/${workout.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"name":"Updated Morning Run"}""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(workout.id))
+            .andExpect(jsonPath("$.name").value("Updated Morning Run"))
+
+        assertTrue(
+            workoutRepository.findById(workout.id!!).get().name == "Updated Morning Run"
+        )
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `cannot patch another user's workout`() {
+        val workout = workoutRepository.findAll().first { it.name == "Yoga" }
+
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/${workout.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"name":"Should Not Change"}""")
+        )
+            .andExpect(status().isNotFound)
+
+        assertTrue(
+            workoutRepository.findById(workout.id!!).get().name == "Yoga"
+        )
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `deletes a workout owned by the authenticated user`() {
+        val workout = workoutRepository.findAll().first { it.name == "Evening Lift" }
+
+        mockMvc.perform(
+            delete("/api/v1/fittrack/workouts/${workout.id}")
+        )
+            .andExpect(status().isNoContent)
+
+        assertFalse(workoutRepository.findById(workout.id!!).isPresent)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `cannot delete another user's workout`() {
+        val workout = workoutRepository.findAll().first { it.name == "Yoga" }
+
+        mockMvc.perform(
+            delete("/api/v1/fittrack/workouts/${workout.id}")
+        )
+            .andExpect(status().isNotFound)
+
+        assertTrue(workoutRepository.findById(workout.id!!).isPresent)
     }
 }

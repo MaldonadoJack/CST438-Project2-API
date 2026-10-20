@@ -59,6 +59,9 @@ class SecurityConfig {
                 rules.requestMatchers(HttpMethod.GET, "/api/v1/fittrack/exercises").permitAll()
                 rules.requestMatchers(HttpMethod.PATCH, "/api/v1/fittrack/exercises/*").hasRole("ADMIN")
                 rules.requestMatchers("/fittrack/admin/**").hasRole("ADMIN")
+                rules.requestMatchers(HttpMethod.PATCH, "/api/v1/users/*").hasRole("ADMIN")
+                rules.requestMatchers(HttpMethod.PATCH, "/api/v1/workouts/*").authenticated()
+                rules.requestMatchers(HttpMethod.DELETE, "/api/v1/workouts/*").authenticated()
                 rules.anyRequest().authenticated()
             }
             .oauth2ResourceServer { oauth2 ->
