@@ -1,5 +1,6 @@
 package com.fittrack.api.workout
 
+import com.fittrack.api.user.UserRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -10,8 +11,26 @@ import java.time.OffsetDateTime
 
 @Service
 class WorkoutService(
-    private val workoutRepository: WorkoutRepository
+    private val workoutRepository: WorkoutRepository,
+    private val userRepository: UserRepository
 ) {
+    @Transactional
+    fun createMyWorkout(
+        email: String,
+        name: String,
+        performedAt: OffsetDateTime?
+    ): WorkoutResponse {
+        val user = userRepository.findByEmail(email) ?: throw ResponseStatusException(
+            HttpStatus.NOT_FOUND, "User not found")
+            
+        val workout = Workout(
+            name = name.trim(),
+            performedAt = performedAt ?: OffsetDateTime.now(),
+            user = user
+        )
+        
+        return workoutRepository.save(workout).toResponse()
+    }
     @Transactional(readOnly = true)
     fun getMyWorkouts(email: String, pageable: Pageable): Page<WorkoutResponse> {
         return workoutRepository.findByUserEmail(email, pageable).map { it.toResponse() }
