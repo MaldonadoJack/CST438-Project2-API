@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 @Repository
 interface WorkoutRepository : JpaRepository<Workout, Long> {
     fun findByUserEmail(email: String, pageable: Pageable): Page<Workout>
+    fun findByIdAndUserEmail(id: Long, email: String): Workout?
 }
