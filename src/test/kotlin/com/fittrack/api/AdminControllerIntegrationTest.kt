@@ -19,6 +19,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delet
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -132,5 +134,47 @@ class AdminControllerIntegrationTest @Autowired constructor(
                 .param("id", "0")
         )
             .andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `admin can promote a user to admin`() {
+        val user = userRepository.findByEmail("user1@example.com")!!
+
+        mockMvc.perform(
+            patch("/fittrack/admin/users/${user.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"admin"""")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(user.id))
+            .andExpect(jsonPath("$.role").value("admin"))
+
+        val updatedUser = userRepository.findById(user.id!!).get()
+        assertEquals("admin", updatedUser.role)
+    }
+
+    @Test
+    @WithMockUser(roles = ["USER"])
+    fun `regular user cannot promote another user`() {
+        val user = userRepository.findByEmail("user1@example.com")!!
+
+        mockMvc.perform(
+            patch("/fittrack/admin/users/${user.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"admin"}""")
+        )
+            .andExpect(status().isForbidden)
+
+        assertEquals("user", userRepository.findById(user.id!!).get().role)
+    }
+
+    @Test
+    fun `promoting a missing user returns not found`() {
+        mockMvc.perform(
+            patch("/fittrack/admin/users/999")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"role":"admin"}""")
+        )
+            .andExpect(status().isNotFound)
     }
 }

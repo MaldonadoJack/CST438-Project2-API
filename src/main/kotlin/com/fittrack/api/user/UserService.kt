@@ -58,4 +58,17 @@ class UserService(
             displayName = user.displayName
         )
     }
+
+    @Transactional
+    fun promoteToAdmin(id: Long): User {
+        val user = userRepository.findById(id).orElseThrow {
+            ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "User with id $id was not found"
+            )
+        }
+
+        user.role = "admin"
+        return user
+    }
 }
