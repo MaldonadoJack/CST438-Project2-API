@@ -15,8 +15,10 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import java.time.OffsetDateTime
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -169,5 +171,41 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
             .andExpect(status().isNotFound)
 
         assertTrue(workoutRepository.findById(workout.id!!).isPresent)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `creates a new workout successfully`() {
+        mockMvc.perform(
+            post("/api/v1/fittrack/workouts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "name": "New Workout",
+                        "performedAt": "2023-10-10T10:00:00Z"
+                    }
+                """.trimIndent())
+                .with(csrf())
+        )
+            .andExpect(status().isCreated)
+            .andExpect(jsonPath("$.name").value("New Workout"))
+            .andExpect(jsonPath("$.performedAt").value("2023-10-10T10:00:00Z"))
+            .andExpect(jsonPath("$.id").exists())
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `fails to create a workout with empty name`() {
+        mockMvc.perform(
+            post("/api/v1/fittrack/workouts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                        "name": ""
+                    }
+                """.trimIndent())
+                .with(csrf())
+        )
+            .andExpect(status().isBadRequest)
     }
 }
