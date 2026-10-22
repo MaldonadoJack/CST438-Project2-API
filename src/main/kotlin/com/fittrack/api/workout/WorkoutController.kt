@@ -40,7 +40,7 @@ class WorkoutController(
         if (email.isBlank()) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authenticated email is required")
         }
-        
+
         return workoutService.getMyWorkouts(email, pageable)
     }
 
@@ -54,6 +54,7 @@ class WorkoutController(
             request.name,
             request.performedAt
         )
+
         return ResponseEntity.status(HttpStatus.CREATED).body(response)
     }
 
@@ -78,6 +79,17 @@ class WorkoutController(
     ): ResponseEntity<Void> {
         workoutService.deleteMyWorkout(workoutId, authentication.name)
         return ResponseEntity.noContent().build()
+    }
+
+    @PatchMapping("/{workoutId}/complete")
+    fun completeWorkout(
+        @PathVariable workoutId: Long,
+        authentication: Authentication
+    ): WorkoutResponse {
+        return workoutService.completeMyWorkout(
+            workoutId,
+            authentication.name
+        )
     }
 }
 
