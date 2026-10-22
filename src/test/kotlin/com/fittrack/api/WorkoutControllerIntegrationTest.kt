@@ -5,6 +5,10 @@ import com.fittrack.api.user.UserRepository
 import com.fittrack.api.workout.Workout
 import com.fittrack.api.workout.WorkoutRepository
 import org.hamcrest.Matchers.hasSize
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,18 +16,16 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import java.time.OffsetDateTime
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -114,7 +116,8 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user1@example.com")
     fun `patches a workout owned by the authenticated user`() {
-        val workout = workoutRepository.findAll().first { it.name == "Morning Run" }
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Morning Run" }
 
         mockMvc.perform(
             patch("/api/v1/fittrack/workouts/${workout.id}")
@@ -126,14 +129,16 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
             .andExpect(jsonPath("$.name").value("Updated Morning Run"))
 
         assertTrue(
-            workoutRepository.findById(workout.id!!).get().name == "Updated Morning Run"
+            workoutRepository.findById(workout.id!!).get().name ==
+                "Updated Morning Run"
         )
     }
 
     @Test
     @WithMockUser(username = "user1@example.com")
     fun `cannot patch another user's workout`() {
-        val workout = workoutRepository.findAll().first { it.name == "Yoga" }
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Yoga" }
 
         mockMvc.perform(
             patch("/api/v1/fittrack/workouts/${workout.id}")
@@ -150,7 +155,8 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user1@example.com")
     fun `deletes a workout owned by the authenticated user`() {
-        val workout = workoutRepository.findAll().first { it.name == "Evening Lift" }
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Evening Lift" }
 
         mockMvc.perform(
             delete("/api/v1/fittrack/workouts/${workout.id}")
@@ -163,7 +169,8 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
     @Test
     @WithMockUser(username = "user1@example.com")
     fun `cannot delete another user's workout`() {
-        val workout = workoutRepository.findAll().first { it.name == "Yoga" }
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Yoga" }
 
         mockMvc.perform(
             delete("/api/v1/fittrack/workouts/${workout.id}")
@@ -179,17 +186,22 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
         mockMvc.perform(
             post("/api/v1/fittrack/workouts")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                    """
                     {
                         "name": "New Workout",
                         "performedAt": "2023-10-10T10:00:00Z"
                     }
-                """.trimIndent())
+                    """.trimIndent()
+                )
                 .with(csrf())
         )
             .andExpect(status().isCreated)
             .andExpect(jsonPath("$.name").value("New Workout"))
-            .andExpect(jsonPath("$.performedAt").value("2023-10-10T10:00:00Z"))
+            .andExpect(
+                jsonPath("$.performedAt")
+                    .value("2023-10-10T10:00:00Z")
+            )
             .andExpect(jsonPath("$.id").exists())
     }
 
@@ -199,13 +211,120 @@ class WorkoutControllerIntegrationTest @Autowired constructor(
         mockMvc.perform(
             post("/api/v1/fittrack/workouts")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                    """
                     {
                         "name": ""
                     }
-                """.trimIndent())
+                    """.trimIndent()
+                )
                 .with(csrf())
         )
             .andExpect(status().isBadRequest)
+    }
+
+    // Issue #20: Mark a Workout as Completed
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `completes a workout owned by the authenticated user`() {
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Morning Run" }
+
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/${workout.id}/complete")
+        )
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value(workout.id))
+            .andExpect(jsonPath("$.isCompleted").value(true))
+            .andExpect(jsonPath("$.completedAt").isNotEmpty)
+
+        val updated = workoutRepository.findById(workout.id!!).get()
+
+        assertTrue(updated.isCompleted)
+        assertNotNull(updated.completedAt)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `completing a workout twice preserves completion date`() {
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Morning Run" }
+
+        val url = "/api/v1/fittrack/workouts/${workout.id}/complete"
+
+        mockMvc.perform(patch(url))
+            .andExpect(status().isOk)
+
+        val firstCompletion = workoutRepository
+            .findById(workout.id!!)
+            .get()
+            .completedAt
+
+        mockMvc.perform(patch(url))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.isCompleted").value(true))
+
+        val secondCompletion = workoutRepository
+            .findById(workout.id!!)
+            .get()
+            .completedAt
+
+        assertNotNull(firstCompletion)
+        assertEquals(firstCompletion, secondCompletion)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `cannot complete another user's workout`() {
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Yoga" }
+
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/${workout.id}/complete")
+        )
+            .andExpect(status().isNotFound)
+
+        val unchanged = workoutRepository.findById(workout.id!!).get()
+
+        assertFalse(unchanged.isCompleted)
+        assertTrue(unchanged.completedAt == null)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `cannot complete a nonexistent workout`() {
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/999999/complete")
+        )
+            .andExpect(status().isNotFound)
+    }
+
+    @Test
+    fun `cannot complete a workout without authentication`() {
+        val workout = workoutRepository.findAll()
+            .first { it.name == "Morning Run" }
+
+        mockMvc.perform(
+            patch("/api/v1/fittrack/workouts/${workout.id}/complete")
+        )
+            .andExpect(status().isUnauthorized)
+
+        val unchanged = workoutRepository.findById(workout.id!!).get()
+
+        assertFalse(unchanged.isCompleted)
+    }
+
+    @Test
+    @WithMockUser(username = "user1@example.com")
+    fun `new workouts are initially incomplete`() {
+        mockMvc.perform(
+            post("/api/v1/fittrack/workouts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""{"name":"New Incomplete Workout"}""")
+        )
+            .andExpect(status().isCreated)
+            .andExpect(jsonPath("$.isCompleted").value(false))
+            .andExpect(jsonPath("$.completedAt").value(null))
     }
 }

@@ -36,6 +36,8 @@ CREATE TABLE workouts (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     name TEXT NOT NULL,
     performed_at TIMESTAMPTZ,
+    is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    completed_at TIMESTAMPTZ,
     user_id BIGINT NOT NULL,
 
     CONSTRAINT fk_workout_user

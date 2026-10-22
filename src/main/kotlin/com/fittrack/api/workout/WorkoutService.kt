@@ -22,15 +22,16 @@ class WorkoutService(
     ): WorkoutResponse {
         val user = userRepository.findByEmail(email) ?: throw ResponseStatusException(
             HttpStatus.NOT_FOUND, "User not found")
-            
+
         val workout = Workout(
             name = name.trim(),
             performedAt = performedAt ?: OffsetDateTime.now(),
             user = user
         )
-        
+
         return workoutRepository.save(workout).toResponse()
     }
+
     @Transactional(readOnly = true)
     fun getMyWorkouts(email: String, pageable: Pageable): Page<WorkoutResponse> {
         return workoutRepository.findByUserEmail(email, pageable).map { it.toResponse() }
@@ -76,5 +77,21 @@ class WorkoutService(
             HttpStatus.NOT_FOUND, "Workout not found")
 
         workoutRepository.delete(workout)
+    }
+
+    @Transactional
+    fun completeMyWorkout(id: Long, email: String): WorkoutResponse {
+        val workout = workoutRepository.findByIdAndUserEmail(id, email)
+            ?: throw ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Workout not found"
+            )
+
+        if (!workout.isCompleted) {
+            workout.isCompleted = true
+            workout.completedAt = OffsetDateTime.now()
+        }
+
+        return workout.toResponse()
     }
 }
