@@ -51,6 +51,13 @@ class SecurityConfig {
         http.csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { rules ->
+                rules.requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml"
+                ).permitAll()
                 rules.requestMatchers(HttpMethod.POST, "/api/v1/fittrack/exercises").hasRole("ADMIN")
                 rules.requestMatchers(HttpMethod.PUT, "/api/v1/fittrack/exercises").hasRole("ADMIN")
                 rules.requestMatchers(HttpMethod.DELETE, "/api/v1/fittrack/exercises").hasRole("ADMIN")
