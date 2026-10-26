@@ -1,69 +1,152 @@
-# CST 438 Project 02: API Template
+# FitTrack API
 
-Starter repo for Project 02. **One person per team** clicks **Use this template → Create a new
-repository**, names it after your API, and adds teammates as collaborators.
-
-> Replace this README with your own in Sprint 4. The prompt lists what it must contain.
-
-## What's in here
-
-| Path | What it is | When |
-|---|---|---|
-| `docs/proposal.md` | Proposal template: pitch, resources, ER sketch, endpoints, choices, risks | **Thu 10/1** |
-| `docs/openapi.yaml` | A complete example contract (workout tracker). Replace it with your API. | Sprint 1 |
-| `redocly.yaml` | Lint rules for the contract | Sprint 1 |
-| `.github/ISSUE_TEMPLATE/user_story.md` | Every new issue starts as a user story with acceptance criteria | now |
-| `.github/pull_request_template.md` | Every PR starts with `Closes #` and a test checklist | now |
-| `.gitignore` | Gradle, Android, IntelliJ, Node, and **secrets** (`.env`, keystores, `local.properties`) | now |
-
-Where your code goes is up to you: an `api/` and an `android/` folder in this repo (monorepo),
-or a second repo for the Android app. Write it down in an ADR.
-
-## First 15 minutes
-
-- [ ] Add teammates: **Settings → Collaborators**
-- [ ] Protect `main`: **Settings → Rules → Rulesets → New branch ruleset**. Target the default branch,
-      require a PR with **2 approvals** (1 for a team of 3), block force pushes. Enforcement: **Active**.
-- [ ] Create milestones `Sprint 1` through `Sprint 4`: **Issues → Milestones**
-- [ ] Create a Project board (Kanban) and link it: **Projects tab → Link a project**
-- [ ] Start `docs/proposal.md` on a branch:
-
-```bash
-git switch -c docs/proposal
-# edit docs/proposal.md
-git add docs/proposal.md
-git commit -m "Draft proposal"
-git push -u origin docs/proposal
-gh pr create --fill
-```
-
-## Working with the contract
-
-No installs needed beyond Node (`npx` runs the tools).
-
-```bash
-# Lint: fix every error before you open a PR
-npx @redocly/cli lint docs/openapi.yaml
-
-# Mock server: a fake API built from the contract, at http://127.0.0.1:4010
-npx @stoplight/prism-cli mock docs/openapi.yaml
-
-curl -H "Authorization: Bearer x" "http://127.0.0.1:4010/api/v1/workouts?page=0&size=20"
-curl -i http://127.0.0.1:4010/api/v1/workouts          # 401: no token
-curl -H "Authorization: Bearer x" -H "Prefer: code=404" \
-     http://127.0.0.1:4010/api/v1/workouts/42          # force an error response
-```
-
-The mock **validates** your requests and returns the `example:` values from the contract.
-**Nothing is saved**: a POST followed by a GET returns the example, not what you posted. The
-Android emulator reaches it at `http://10.0.2.2:4010`.
-
-To see the contract rendered, paste `docs/openapi.yaml` into https://editor.swagger.io.
+FitTrack API is the Spring Boot backend for the FitTrack Android application. It stores users, exercises, workouts, and progress data in PostgreSQL, accepts Google ID tokens for authentication, and exposes interactive OpenAPI documentation through Swagger UI.
 
 ## Links
 
-- Project 02 prompt and rubric: Canvas → Project 02 module
-- OpenAPI 3.0 spec: https://spec.openapis.org/oas/v3.0.3
-- Prism: https://docs.stoplight.io/docs/prism
-- Mermaid ER diagrams: https://mermaid.js.org/syntax/entityRelationshipDiagram.html
-- RFC 9457 Problem Details: https://www.rfc-editor.org/rfc/rfc9457
+- Live API: <https://fittrack-api-noemhi.onrender.com/>
+- Swagger UI: <https://fittrack-api-noemhi.onrender.com/swagger-ui.html>
+- Android application: <https://github.com/MaldonadoJack/cst438-Project2>
+- API contract: [`docs/openapi.yaml`](docs/openapi.yaml)
+
+The live API root may return `401 Unauthorized`. This still confirms that the service is running; protected endpoints require a valid Google ID token.
+
+## Technology
+
+- Kotlin and Java 21
+- Spring Boot 3
+- Spring Security and Google OAuth
+- Spring Data JPA
+- PostgreSQL (hosted with Supabase for the deployed application)
+- Gradle
+- Docker
+- Springdoc OpenAPI and Swagger UI
+
+## Requirements
+
+Install the following before running the backend locally:
+
+- JDK 21
+- PostgreSQL, or access to the team's Supabase PostgreSQL database
+- Docker Desktop, if you want to run the container
+- Node.js, only if you want to lint the OpenAPI file with Redocly
+
+## Database setup
+
+The database files are located in [`database/`](database/):
+
+- `schema.sql` creates the users, exercises, workouts, and workout-exercise tables.
+- `migrations/001_add_workout_completion.sql` contains the workout-completion migration.
+
+For a new database, run `database/schema.sql` first and then apply the numbered migrations in order. You can run the files in the Supabase SQL Editor or with PostgreSQL's `psql` command.
+
+```bash
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/schema.sql
+psql "postgresql://USER:PASSWORD@HOST:5432/postgres" -f database/migrations/001_add_workout_completion.sql
+```
+
+Do not put a real password in the repository or in a committed script.
+
+## Environment variables
+
+The backend reads its configuration from environment variables.
+
+| Variable | Purpose | Example format |
+| --- | --- | --- |
+| `DB_URL` | PostgreSQL JDBC connection URL | `jdbc:postgresql://HOST:5432/postgres` |
+| `DB_USERNAME` | PostgreSQL database user | `postgres.PROJECT_ID` |
+| `DB_PASSWORD` | PostgreSQL database password | `your-database-password` |
+| `GOOGLE_CLIENT_ID` | Google OAuth web client ID accepted by the API | `123456.apps.googleusercontent.com` |
+
+Use your own values locally. Never commit credentials, client secrets, `.env` files, or database passwords.
+
+## Run locally
+
+From the repository root, set the environment variables and start Spring Boot:
+
+```bash
+export DB_URL="jdbc:postgresql://HOST:5432/postgres"
+export DB_USERNAME="postgres.PROJECT_ID"
+export DB_PASSWORD="your-database-password"
+export GOOGLE_CLIENT_ID="your-web-client-id.apps.googleusercontent.com"
+
+./gradlew bootRun
+```
+
+The API starts at <http://localhost:8080>. Local Swagger UI is available at <http://localhost:8080/swagger-ui.html>.
+
+## Test and build
+
+Run the complete backend test suite:
+
+```bash
+./gradlew test
+```
+
+Build the executable Spring Boot JAR:
+
+```bash
+./gradlew clean bootJar
+```
+
+The JAR is written to `build/libs/`. GitHub Actions also runs the tests, builds the JAR, and saves it as a workflow artifact on pushes and pull requests to `main`.
+
+## Docker
+
+Build the production image from the multi-stage Dockerfile:
+
+```bash
+docker build -t fittrack-api .
+```
+
+Run the image with the required environment variables:
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e DB_URL="jdbc:postgresql://HOST:5432/postgres" \
+  -e DB_USERNAME="postgres.PROJECT_ID" \
+  -e DB_PASSWORD="your-database-password" \
+  -e GOOGLE_CLIENT_ID="your-web-client-id.apps.googleusercontent.com" \
+  fittrack-api
+```
+
+The `.dockerignore` file excludes local builds, Git history, IDE settings, and `.env` files from the image context.
+
+## OpenAPI contract
+
+The hand-written contract is [`docs/openapi.yaml`](docs/openapi.yaml). Lint it before opening a pull request:
+
+```bash
+npx @redocly/cli lint docs/openapi.yaml
+```
+
+The deployed Swagger page is generated from the running Spring controllers. When an endpoint changes, update the hand-written contract and its tests in the same pull request.
+
+## Authentication
+
+Protected routes expect a Google ID token:
+
+```text
+Authorization: Bearer GOOGLE_ID_TOKEN
+```
+
+The token's audience must match `GOOGLE_CLIENT_ID`. The Android application obtains the token through Google Credential Manager and sends it to the API.
+
+## Project structure
+
+```text
+database/                 PostgreSQL schema and migrations
+docs/                     API contract and design documentation
+src/main/kotlin/          Spring controllers, services, repositories, and models
+src/main/resources/       Spring configuration
+src/test/kotlin/          Unit and integration tests
+Dockerfile                Multi-stage production container
+```
+
+## Troubleshooting
+
+- **Database authentication failed:** verify `DB_USERNAME`, `DB_PASSWORD`, and the Supabase connection-pooler URL.
+- **Database connection refused:** confirm the database is running and that the host and port are reachable.
+- **Schema validation failed:** apply `database/schema.sql` and all migrations to the selected database.
+- **401 Unauthorized:** supply a current Google ID token whose audience matches `GOOGLE_CLIENT_ID`.
+- **Render is slow on the first request:** a free Render service may need time to wake up.
